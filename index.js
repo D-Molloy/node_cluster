@@ -1,37 +1,29 @@
-const cluster = require("cluster");
+const crypto = require("crypto");
+const express = require("express");
 const PORT = 3000;
-//the first instance of the cluster will be the `Cluster Manager` and cluster.isMaster === true
-// once we start forking off Worker Instances, isMaster will be set to false
-// console.log(cluster.isMaster);
 
-// Is the file being executed in master mode?
-if (cluster.isMaster) {
-  //cause index.js to be executed again, but in child/slave mode
-  cluster.fork();
-  // cluster.fork();
-  // cluster.fork();
-  // cluster.fork();
-} else {
-  //I'm a child, I'm going to act like a server and do nothing else
-  const express = require("express");
-  const app = express();
+//  START USING PM2
+// >pm2 start index.js -i 0
+// -i 0 - let PM2 figure out how many instances to start (the # of instances should be equal to the # of logical cores)
 
-  //doWork simulates doing a lot of work for a specific duration (ms)
-  const doWork = duration => {
-    const start = Date.now();
-    while (Date.now() - start < duration) {}
-  };
+// > pm2 list - status check
+// > pm2 show index.js - detailed info about a set of children
+// > pm2 monit - inspect logs from a particular process
 
-  app.get("/", (req, res) => {
-    doWork(5000);
+// STOP RUNNING CHILDREN > pm2 delete index (filename)
+
+const app = express();
+
+app.get("/", (req, res) => {
+  crypto.pbkdf2("a", "b", 100000, 512, "sha512", () => {
     res.send("hi there");
   });
+});
 
-  app.get("/fast", (req, res) => {
-    res.send("This was fast!");
-  });
+app.get("/fast", (req, res) => {
+  res.send("This was fast!");
+});
 
-  app.listen(PORT, () => {
-    console.log(`Listening on PORT ${PORT}`);
-  });
-}
+app.listen(PORT, () => {
+  console.log(`Listening on PORT ${PORT}`);
+});
